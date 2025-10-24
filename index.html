@@ -69,6 +69,57 @@
             alert("Сейчас мы будем сканировать QR! Переходим к следующему этапу.");
         });
 
+
+        // ... остальной код JavaScript
+
+    // Функция для начисления очков
+    function addScore(points) {
+        score += points;
+        scoreElement.textContent = score;
+        WebApp.showAlert(`Найдено! Вы получили ${points} очков.`); 
+        // WebApp.showAlert() - это метод для вывода нативного всплывающего сообщения Telegram.
+    }
+
+    // Обработчик нажатия на кнопку "Начать Сканирование QR"
+    document.getElementById('qr-button').addEventListener('click', () => {
+        // Вызываем нативный сканер QR-кодов Telegram
+        WebApp.showScanQrPopup({
+            text: "Отсканируйте QR-код с таблички в кабинете!"
+        });
+    });
+
+    // **Слушаем событие, которое сработает, когда QR-код будет отсканирован**
+    WebApp.onEvent('qrTextReceived', (data) => {
+        const qrData = data.data; 
+        
+        // **Зачем это нужно?** Mini App не ждет ответа от showScanQrPopup, 
+        // а просто подписывается на событие `qrTextReceived`.
+        
+        WebApp.closeScanQrPopup(); // Закрываем сканер, если он еще открыт
+
+        // Простая логика проверки QR-кода
+        if (qrData.startsWith('AR-CABINET-')) {
+            // Успешно найден AR-объект (например, в кабинете 315)
+            const cabinetId = qrData.split('-')[2]; 
+            
+            // Здесь должна быть логика проверки: 
+            // 1. Не сканировал ли пользователь этот код раньше? (Нужен бэкенд)
+            // 2. Соответствует ли этот код текущему заданию? (Нужен бэкенд)
+            
+            // Пока просто начисляем очки
+            addScore(100);
+            
+            // Если нужно отправить данные в бота для фиксации на сервере
+            // WebApp.sendData(`QR_SCANNED:${qrData}`); 
+
+        } else if (qrData.startsWith('QUIZ-START')) {
+            // Если QR-код ведет к началу квиза
+            WebApp.showAlert("QR-код для начала квиза!");
+        } else {
+            WebApp.showAlert("Неверный QR-код квеста.");
+        }
+    });
+
     </script>
 </body>
 </html>
