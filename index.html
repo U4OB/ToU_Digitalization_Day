@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini App Квест</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            /* 2. Устанавливаем фон, чтобы он соответствовал теме Telegram */
+            background-color: var(--tg-theme-bg-color); 
+            color: var(--tg-theme-text-color);
+            font-family: sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            /* 3. Используем цвета Telegram для кнопки */
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Добро пожаловать в Mini App!</h1>
+        <p>Текущий счет: <span id="score">0</span></p>
+        
+        <button id="qr-button">Начать Сканирование QR</button>
+    </div>
+
+    <script>
+        // JavaScript для Mini App
+        const WebApp = window.Telegram.WebApp;
+        
+        // 1. Инициализация. Сообщаем Telegram, что приложение готово.
+        WebApp.ready(); 
+        
+        // 2. Получаем имя пользователя из безопасных данных
+        const userName = WebApp.initDataUnsafe.user 
+            ? WebApp.initDataUnsafe.user.first_name || "Участник" 
+            : "Гость";
+            
+        document.querySelector('h1').textContent = `Привет, ${userName}!`;
+
+        // 3. (Опционально) Расширяем Mini App на весь экран для лучшего опыта.
+        WebApp.expand(); 
+        
+        // **Зачем это нужно (WebApp.ready() и WebApp.expand())?**
+        // Mini App по умолчанию загружается в маленьком окне. 
+        // `WebApp.ready()` сообщает Telegram, что контент загружен и WebView можно показать.
+        // `WebApp.expand()` растягивает его на весь доступный экран устройства, что идеально для квестов.
+
+        // Глобальный счет (пока без сервера)
+        let score = 0;
+        const scoreElement = document.getElementById('score');
+        
+        // Кнопка QR-сканера
+        document.getElementById('qr-button').addEventListener('click', () => {
+            alert("Сейчас мы будем сканировать QR! Переходим к следующему этапу.");
+        });
+
+    </script>
+</body>
+</html>
