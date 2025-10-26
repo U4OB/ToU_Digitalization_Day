@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAR Сканер для Telegram Mini App</title>
+    <!-- Загрузка Tailwind CSS для стилей интерфейса -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Загрузка библиотек A-Frame и AR.js для WebAR -->
+    <!-- A-Frame - основа для 3D/AR -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <!-- AR.js - добавляет функциональность отслеживания маркеров (Marker Tracking) -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+    <style>
+        /* Стиль для оверлея, который будет поверх AR-сцены */
+        #ar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Позволяет кликам проходить сквозь оверлей на AR-объекты */
+            z-index: 100;
+        }
+
+        /* Убедимся, что A-Frame занимает весь экран */
+        a-scene {
+            height: 100vh;
+            width: 100vw;
+            display: block;
+        }
+
+        /* Переопределяем pointer-events для интерактивных элементов внутри оверлея */
+        .interactive-ui {
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 font-sans h-screen w-screen overflow-hidden">
+
+    <!-- Интерфейс пользователя (Оверлей) -->
+    <div id="ar-overlay">
+        <div class="p-4 flex justify-between items-start interactive-ui">
+            <!-- Отображение очков -->
+            <div id="score-display" class="bg-indigo-600 text-white font-bold text-xl px-4 py-2 rounded-lg shadow-lg">
+                Очки: 0
+            </div>
+            <!-- Инструкция/Сообщение -->
+            <div id="message-box" class="bg-yellow-300 text-gray-800 font-medium px-4 py-2 rounded-lg shadow-lg max-w-xs text-sm">
+                Наведите камеру на стандартный маркер 'Hiro'
+            </div>
+        </div>
+
+        <div id="feedback-message" class="absolute inset-x-0 bottom-20 text-center interactive-ui">
+            <!-- Сообщения об успехе или ошибке -->
+        </div>
+
+    </div>
+
+    <!-- WebAR Сцена (A-Frame) -->
+    <!-- arjs='sourceType: webcam;' - Используем веб-камеру -->
+    <!-- vr-mode-ui='enabled: false;' - Отключаем кнопку VR-режима -->
+    <a-scene
+        embedded
+        arjs='sourceType: webcam; trackingMethod: best;'
+        vr-mode-ui='enabled: false;'
+        renderer="logarithmicDepthBuffer: true;"
+        loading-screen="enabled: false;">
+
+        <!-- Маркер "Hiro". Когда камера увидит этот маркер, содержимое a-marker будет отображено -->
+        <a-marker preset="hiro">
+            <!-- AR-объект, который будет давать очки -->
+            <a-box
+                id="ar-object"
+                position="0 0.5 0"
+                rotation="0 45 0"
+                scale="0.5 0.5 0.5"
+                color="#FF4500"
+                material="opacity: 0.9; metalness: 0.5;"
+                shadow>
+            </a-box>
+        </a-marker>
+
+        <!-- Камера, необходимая для AR.js -->
+        <a-entity camera></a-entity>
+    </a-scene>
+
+
+    <script>
+        const scoreDisplay = document.getElementById('score-display');
+        const messageBox = document.getElementById('message-box');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const arObject = document.getElementById('ar-object');
+
+        let score = 0;
+        let objectVisible = false;
+
+        // ====================================================================
+        // 1. ЛОГИКА НАЧИСЛЕНИЯ ОЧКОВ
+        // ====================================================================
+
+        // Функция для обновления интерфейса
+        function updateScore(points) {
+            score += points;
+            scoreDisplay.textContent = `Очки: ${score}`;
+            showFeedback(`+${points} Очко!`, 'bg-green-500');
+
+            // Здесь вы можете вызвать функцию Dart/Flutter, если бы это было встроено:
+            // window.flutter_inappwebview.callHandler('addPoints', score);
+        }
+
+        // Показывает временное сообщение обратной связи
+        function showFeedback(text, bgColor) {
+            feedbackMessage.innerHTML = `<div class="${bgColor} text-white font-bold px-6 py-3 rounded-full shadow-xl animate-pulse text-lg">${text}</div>`;
+            setTimeout(() => {
+                feedbackMessage.innerHTML = '';
+            }, 1500);
+        }
+
+        // Обработчик клика/нажатия на 3D объект
+        arObject.addEventListener('click', function (evt) {
+            if (objectVisible) {
+                // Предотвращаем многократное нажатие, пока объект "перезаряжается"
+                if (arObject.getAttribute('data-scored') !== 'true') {
+                    arObject.setAttribute('data-scored', 'true');
+                    updateScore(10); // Начисляем 10 очков
+                    
+                    // Делаем объект временно невидимым/некликабельным
+                    arObject.setAttribute('visible', false);
+                    setTimeout(() => {
+                        // Сбрасываем состояние и делаем объект снова видимым
+                        arObject.setAttribute('data-scored', 'false');
+                        arObject.setAttribute('visible', true);
+                        showFeedback('Объект снова доступен!', 'bg-blue-500');
+                    }, 3000); // 3 секунды "перезарядки"
+                } else {
+                    showFeedback('Подождите, объект перезаряжается...', 'bg-red-500');
+                }
+            } else {
+                 showFeedback('Объект не виден!', 'bg-red-500');
+            }
+        });
+
+        // ====================================================================
+        // 2. ОТСЛЕЖИВАНИЕ ВИДИМОСТИ МАРКЕРА
+        // ====================================================================
+
+        const marker = document.querySelector('a-marker');
+
+        marker.addEventListener('markerFound', function() {
+            messageBox.textContent = 'Объект найден! Нажмите на него!';
+            messageBox.classList.remove('bg-yellow-300');
+            messageBox.classList.add('bg-green-400');
+            objectVisible = true;
+        });
+
+        marker.addEventListener('markerLost', function() {
+            messageBox.textContent = 'Потерян. Наведите камеру на маркер.';
+            messageBox.classList.remove('bg-green-400');
+            messageBox.classList.add('bg-yellow-300');
+            objectVisible = false;
+        });
+
+        // ====================================================================
+        // 3. ОБРАБОТКА ЗАГРУЗКИ (ОТЧЕТ ДЛЯ FLUTTER/TMA)
+        // ====================================================================
+
+        window.onload = function() {
+            console.log("WebAR Demo загружено и готово.");
+            // В реальном TMA, когда этот HTML загружен, вы можете
+            // уведомить Flutter/TMA о готовности, например, через Telegram Web App API:
+            // if (window.Telegram && window.Telegram.WebApp) {
+            //     Telegram.WebApp.ready();
+            // }
+        };
+    </script>
+
+</body>
+</html>
