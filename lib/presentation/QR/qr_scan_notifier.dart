@@ -30,7 +30,7 @@ class QrScanNotifier extends StateNotifier<QrScanState> {
       // В реальном приложении: здесь происходит проверка QR-кода на сервере.
       // Для демонстрации: проверяем, является ли код "FAKE_QR_CODE_123"
 
-      const expectedCode = 'FAKE_QR_CODE_123';
+      //const expectedCode = 'FAKE_QR_CODE_123';
       const points = 20;
 
       if (qrResult.startsWith('FAKE_QR_CODE')) {

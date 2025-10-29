@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/home/profile_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Импортируем вкладки
 import 'package:flutter_application_1/screens//quest_tab.dart';
 import 'package:flutter_application_1/screens/quiz_tab.dart';
 import 'package:flutter_application_1/screens/qr_scan_tab.dart';
-import 'package:flutter_application_1/screens/score_tab.dart';
 
 class MainTmaScreen extends ConsumerStatefulWidget {
   // Поскольку это главный экран, он не принимает параметров
@@ -21,9 +21,9 @@ class _MainTmaScreenState extends ConsumerState<MainTmaScreen> {
   // Список виджетов-вкладок
   static final List<Widget> _widgetOptions = <Widget>[
     const QuestTab(), // Бывший QuestScreen, теперь как вкладка
-    const QuizTab(), // ЭКРАН КВИЗА (Заглушка)
-    const QrScanTab(), // ЭКРАН QR-СКАНИРОВАНИЯ (Заглушка)
-    const ScoreTab(), // ЭКРАН СЧЕТА/ПРОФИЛЬ (Заглушка)
+    // const QuizTab(), // ЭКРАН КВИЗА (Заглушка)
+    // const QrScanTab(), // ЭКРАН QR-СКАНИРОВАНИЯ (Заглушка)
+    const ProfileScreen(), // ЭКРАН СЧЕТА/ПРОФИЛЬ (Заглушка)
   ];
 
   // Список заголовков для AppBar
@@ -64,16 +64,16 @@ class _MainTmaScreenState extends ConsumerState<MainTmaScreen> {
             activeIcon: Icon(Icons.star),
             label: 'Квест',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.quiz_outlined),
-            activeIcon: Icon(Icons.quiz),
-            label: 'Квиз',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_scanner),
-            activeIcon: Icon(Icons.qr_code_2),
-            label: 'QR-сканер',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.quiz_outlined),
+          //   activeIcon: Icon(Icons.quiz),
+          //   label: 'Квиз',
+          // ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.qr_code_scanner),
+          //   activeIcon: Icon(Icons.qr_code_2),
+          //   label: 'QR-сканер',
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),

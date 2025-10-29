@@ -54,6 +54,6 @@ class UniversitySelectionScreen extends StatelessWidget {
 void _navigateToLogin(BuildContext context) {
   Navigator.push(
     context,
-    MaterialPageRoute(builder: (context) => LoginScreen()),
+    MaterialPageRoute(builder: (context) => GroupSelectionScreen()),
   );
 }
