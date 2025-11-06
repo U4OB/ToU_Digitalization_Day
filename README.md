@@ -1,16 +1,320 @@
-# flutter_application_1
+# ToU Digitalization Day - Flutter Quest App
 
-A new Flutter project.
+Мобильное приложение для интерактивного квеста в рамках мероприятия "День цифровизации ТОО". Приложение представляет собой Telegram Web App (TWA) с функциями AR-сканирования, прохождения квизов и отслеживания прогресса.
 
-## Getting Started
+## 📋 Описание проекта
 
-This project is a starting point for a Flutter application.
+Приложение построено на архитектуре с использованием:
+- **Flutter Riverpod** для управления состоянием
+- **GoRouter** для навигации
+<!-- - **Firebase** для аутентификации и хранения данных -->
+- **Telegram Web App API** для интеграции с Telegram
+- **AR.js** для AR-функциональности
 
-A few resources to get you started if this is your first Flutter project:
+## 🏗️ Архитектура проекта
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Структура папок
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```
+lib/
+├── main.dart                    # Точка входа приложения
+├── assets/                      # Ресурсы приложения
+│   └── imgs/                    # Изображения и модели данных
+│       └── models/              # Модели данных
+├── data/                        # Слой данных
+│   ├── router.dart              # Конфигурация маршрутизации
+│   └── auth/                    # Аутентификация
+├── presentation/                # Презентационный слой
+│   ├── auth_state_providers.dart
+│   ├── QR/                      # QR-сканирование
+│   ├── quest/                   # Логика квестов
+│   ├── quiz/                    # Логика квизов
+│   └── widgets/                 # Переиспользуемые виджеты
+├── screens/                     # UI экраны
+│   ├── main_tma_screen.dart     # Главный экран с вкладками
+│   ├── login_screen.dart        # Экран входа
+│   ├── group_selection_screen.dart # Выбор группы
+│   └── home/                    # Домашние экраны
+├── styles/                      # Стили и темы
+│   └── app_theme.dart
+└── telegram/                    # Интеграция с Telegram
+    ├── twa_api_service.dart     # API сервис TWA
+    ├── telegram_interop.dart    # JavaScript интеграция
+    └── scan_qr_code_use_case.dart # Use case QR
+```
+
+## 🔧 Технические детали
+
+### Управление состоянием
+
+Приложение использует **Riverpod** для управления состоянием:
+
+#### Основные провайдеры:
+
+1. **AuthNotifier** (`lib/data/auth/auth_notifier.dart`)
+   - Управляет данными пользователя (Telegram ID, группа)
+   - Содержит mock данные для тестирования
+   ```dart
+   final authNotifierProvider = StateNotifierProvider<AuthNotifier, AsyncValue<UserData?>>((ref) {
+     return AuthNotifier();
+   });
+   ```
+
+2. **QuestNotifier** (`lib/presentation/quest/quest_notifier.dart`)
+   - Управляет состоянием квеста (счет, выполненные задания)
+   - Предотвращает повторное засчитывание заданий
+   ```dart
+   final questNotifierProvider = StateNotifierProvider<QuestNotifier, QuestState>((ref) {
+     return QuestNotifier();
+   });
+   ```
+
+3. **GoRouter** (`lib/data/router.dart`)
+   - Конфигурация маршрутизации с редиректами
+   - Проверка авторизации и выбора группы
+
+### Маршрутизация
+
+Система маршрутизации построена на **GoRouter** с автоматическими редиректами:
+
+```dart
+class AppRoutes {
+  static const universitySelection = '/';
+  static const groupSelection = '/select-group';
+  static const quest = '/quest';
+}
+```
+
+**Логика редиректов:**
+- Неавторизованные пользователи → экран выбора группы
+- Пользователи без группы → экран выбора группы  
+- Авторизованные с группой → главный экран квеста
+
+### Модели данных
+
+#### UserData (`lib/data/auth/auth_notifier.dart`)
+```dart
+class UserData {
+  final String userId;        // Telegram ID
+  final String? fullName;     // Имя из Telegram
+  final String? groupId;      // Выбранная группа
+}
+```
+
+#### QuestState (`lib/presentation/quest/quest_notifier.dart`)
+```dart
+class QuestState {
+  final int totalScore;                    // Общий счет
+  final Set<String> completedTasks;        // Выполненные задания
+}
+```
+
+#### Question (`lib/assets/imgs/models/question_model.dart`)
+```dart
+class Question {
+  final String id;
+  final String text;
+  final List<String> options;
+  final String correctAnswer;
+}
+```
+
+## 📱 Экраны приложения
+
+### 1. MainTmaScreen (`lib/screens/main_tma_screen.dart`)
+Главный контейнер приложения с вкладками:
+- **QuestTab** - основной квест с roadmap заданий
+- **ProfileScreen** - профиль и статистика пользователя
+
+### 2. GroupSelectionScreen (`lib/screens/group_selection_screen.dart`)
+- Отображает Telegram ID пользователя
+- Поле для ввода учебной группы
+- Валидация и сохранение группы
+
+### 3. QuestTab (`lib/screens/quest_tab.dart`)
+- Roadmap с заданиями квеста
+- Отображение прогресса выполнения
+- Навигация к квизам и QR-сканированию
+
+## 🔌 Интеграция с Telegram
+
+### TWA API Service (`lib/telegram/twa_api_service.dart`)
+```dart
+class TwaApiService {
+  Future<String> scanQrCode() async {
+    if (!isTelegramWebAppAvailable()) {
+      return 'FAKE_QR_CODE_123'; // Mock для тестирования
+    }
+    showQrScanner(text: 'Наведите камеру на QR-код квеста...');
+    return await _qrTextController.stream.first;
+  }
+}
+```
+
+### JavaScript Interop (`lib/telegram/telegram_interop.dart`)
+Обеспечивает связь между Flutter и Telegram Web App API через JavaScript.
+
+## 🎨 Стили и темы
+
+### AppTheme (`lib/styles/app_theme.dart`)
+Централизованное управление темой приложения:
+- Цветовая схема
+- Типография
+- Стили компонентов
+
+```dart
+class AppThemes {
+  static ThemeData get darkTheme => ThemeData(
+    // Конфигурация темной темы
+  );
+}
+```
+
+## 🚀 Инструкции по разработке
+
+### Настройка окружения
+
+1. **Установите Flutter SDK** (версия >=3.9.2)
+2. **Клонируйте репозиторий**:
+   ```bash
+   git clone <repository-url>
+   cd mobile
+   ```
+3. **Установите зависимости**:
+   ```bash
+   flutter pub get
+   ```
+
+### Запуск приложения
+
+#### Веб-версия (для тестирования TWA):
+```bash
+flutter run -d chrome --web-renderer html
+```
+
+#### Мобильная версия:
+```bash
+# Android
+flutter run -d android
+
+# iOS  
+flutter run -d ios
+```
+
+### Структура разработки
+
+#### Добавление нового экрана:
+
+1. **Создайте файл экрана** в `lib/screens/`
+2. **Добавьте маршрут** в `lib/data/router.dart`:
+   ```dart
+   GoRoute(
+     path: '/new-screen',
+     builder: (context, state) => NewScreen(),
+   )
+   ```
+3. **Обновите `AppRoutes`** константы
+
+#### Добавление нового состояния:
+
+1. **Создайте StateNotifier** в `lib/presentation/`
+2. **Определите провайдер**:
+   ```dart
+   final newStateProvider = StateNotifierProvider<NewNotifier, NewState>((ref) {
+     return NewNotifier();
+   });
+   ```
+3. **Используйте в виджетах**:
+   ```dart
+   Consumer(
+     builder: (context, ref, child) {
+       final state = ref.watch(newStateProvider);
+       // UI логика
+     }
+   )
+   ```
+
+#### Работа с моделями данных:
+
+1. **Создайте модель** в `lib/assets/imgs/models/`
+2. **Добавьте методы сериализации** (`fromJson`, `toJson`)
+3. **Используйте в StateNotifier** для управления состоянием
+
+### Тестирование
+
+#### Mock данные:
+- **AuthNotifier** использует mock Telegram ID: `'tg_user_123456789'`
+- **TwaApiService** возвращает fake QR: `'FAKE_QR_CODE_123'`
+- **QuizRepository** содержит тестовые вопросы
+
+#### Локальная разработка:
+```bash
+# Запуск в режиме отладки
+flutter run --debug
+
+# Горячая перезагрузка
+# Нажмите 'r' в терминале или Ctrl+S в IDE
+```
+
+### Деплой в Telegram
+
+1. **Настройте веб-хостинг** (GitHub Pages, Netlify, Vercel)
+2. **Соберите production билд**:
+   ```bash
+   flutter build web --web-renderer html --base-href /path/
+   ```
+3. **Зарегистрируйте Web App** в BotFather
+4. **Добавьте домен** в настройки бота
+
+## 🔧 Firebase конфигурация
+
+### Необходимые сервисы:
+- **Authentication** - для авторизации пользователей
+- **Firestore** - для хранения состояния квестов
+- **Analytics** - для отслеживания активности
+
+### Настройка:
+1. Создайте проект в Firebase Console
+2. Добавьте конфигурацию в `lib/firebase_options.dart`
+3. Обновите правила безопасности Firestore
+
+## 🐛 Отладка
+
+### Частые проблемы:
+
+1. **Telegram Web App не работает**:
+   - Проверьте доступность `window.Telegram.WebApp`
+   - Убедитесь, что приложение запущено в Telegram
+
+2. **QR-сканер не отвечает**:
+   - Проверьте permissions камеры
+   - Используйте HTTPS для веб-версии
+
+3. **Состояние не обновляется**:
+   - Проверьте правильность использования `ref.watch` vs `ref.read`
+   - Убедитесь в корректности StateNotifier логики
+
+### Логирование:
+```dart
+print('Debug: ${variable}'); // Простое логирование
+debugPrint('Debug info');    // Flutter-специфичное
+```
+
+## 📚 Полезные ресурсы
+
+- [Flutter Documentation](https://docs.flutter.dev/)
+- [Riverpod Documentation](https://riverpod.dev/)
+- [GoRouter Documentation](https://pub.dev/packages/go_router)
+- [Telegram Web Apps API](https://core.telegram.org/bots/webapps)
+- [Firebase Flutter Setup](https://firebase.google.com/docs/flutter/setup)
+
+## 👥 Команда разработки
+
+При работе с кодом следуйте:
+- **Конвенциям именования** Dart
+- **Архитектурным принципам** проекта
+- **Code review** процессу перед merge
+
+---
+
+*Последнее обновление: 5 ноября 2025 г.*
