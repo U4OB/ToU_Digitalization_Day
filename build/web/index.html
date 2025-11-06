@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/ToU_Digitalization_Day/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="flutter_application_1">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>flutter_application_1</title>
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Стили для AR сцены -->
+  <style>
+    /* Убеждаемся, что a-scene видна и занимает весь экран */
+    a-scene {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: -1 !important; /* Позади Flutter UI */
+      display: block !important;
+    }
+    
+    /* Скрываем Flutter UI элементы, которые могут перекрывать AR */
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+  
+  <!-- A-Frame должен загружаться ПЕРВЫМ (синхронно) -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  
+  <!-- MindAR загружается ПОСЛЕ A-Frame (синхронно) -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image-aframe.prod.js"></script>
+  
+  <!-- AR логика загружается ПОСЛЕ всех библиотек -->
+  <script src="ar_scene_logic.js"></script>
+  
+  <!-- Проверка загрузки всех библиотек -->
+  <script>
+    window.addEventListener('load', function() {
+      console.log('📦 Проверка загрузки библиотек:');
+      console.log('  - AFRAME:', typeof AFRAME !== 'undefined' ? '✅' : '❌');
+      console.log('  - MINDAR:', typeof MINDAR !== 'undefined' ? '✅' : '❌');
+      console.log('  - initializeArScene:', typeof initializeArScene !== 'undefined' ? '✅' : '❌');
+    });
+  </script>
+  
+  <!-- A-Scene создается ПОСЛЕ загрузки всех скриптов -->
+  <a-scene 
+    mindar-image="imageTargetSrc: targets/targets.mind; autoStart: false; filterMinCF:0.0001; filterBeta: 1; uiError: false; uiLoading: no;"
+    vr-mode-ui="enabled: false" 
+    embedded 
+    id="ar-container"
+    color-space="sRGB" 
+    renderer="logarithmicDepthBuffer: true; antialias: true; precision: medium; alpha: true;"
+    background="color: transparent"
+    >
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    
+  </a-scene>
+</body>
+</html>

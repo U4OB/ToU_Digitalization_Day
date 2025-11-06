@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <script src="https://cdn.jsdelivr.net/npm/@ar-js-org/ar.js@3.4.0/dist/ar.js"></script>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-align: center;
+            z-index: 1000;
+        }
+        .scanning-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.8) 100%);
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <h3>Загрузка AR...</h3>
+        <p>Разрешите доступ к камере</p>
+    </div>
+
+    <div class="scanning-overlay"></div>
+
+    <a-scene 
+        vr-mode-ui="enabled: false"
+        arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
+        renderer="antialias: true; alpha: true;"
+        embedded
+    >
+        <!-- Маркер для изображения 1 -->
+        <a-nft 
+            type="nft"
+            url="targets/target1/target1-image"
+            smooth="true"
+            smoothCount="10"
+            smoothTolerance="0.01"
+            smoothThreshold="5"
+            emitevents="true"
+            id="marker1"
+        >
+            <a-entity 
+                gltf-model="models/treasure_chest.gltf"
+                scale="0.5 0.5 0.5"
+                position="0 0.5 0"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 5000;"
+                class="clickable"
+                data-object-id="treasure_chest"
+                data-object-name="Сундук с сокровищами"
+                data-points="10"
+                data-description="Древний сундук, полный драгоценностей и золотых монет."
+            >
+                <a-text 
+                    value="Сундук с сокровищами\n+10 баллов"
+                    position="0 1.5 0"
+                    align="center"
+                    color="#FFD700"
+                    scale="2 2 2"
+                ></a-text>
+            </a-entity>
+        </a-nft>
+
+        <!-- Маркер для изображения 2 -->
+        <a-nft 
+            type="nft"
+            url="targets/target2/target2-image"
+            smooth="true"
+            smoothCount="10"
+            smoothTolerance="0.01"
+            smoothThreshold="5"
+            emitevents="true"
+            id="marker2"
+        >
+            <a-entity 
+                gltf-model="models/magic_crystal.gltf"
+                scale="0.3 0.3 0.3"
+                position="0 0.5 0"
+                animation="property: rotation; to: 360 360 0; loop: true; dur: 3000;"
+                class="clickable"
+                data-object-id="magic_crystal"
+                data-object-name="Магический кристалл"
+                data-points="15"
+                data-description="Сияющий кристалл, излучающий магическую энергию."
+            >
+                <a-text 
+                    value="Магический кристалл\n+15 баллов"
+                    position="0 2 0"
+                    align="center"
+                    color="#00FF00"
+                    scale="2 2 2"
+                ></a-text>
+            </a-entity>
+        </a-nft>
+
+        <!-- Маркер для изображения 3 -->
+        <a-nft 
+            type="nft"
+            url="targets/target3/target3-image"
+            smooth="true"
+            smoothCount="10"
+            smoothTolerance="0.01"
+            smoothThreshold="5"
+            emitevents="true"
+            id="marker3"
+        >
+            <a-entity 
+                gltf-model="models/ancient_artifact.gltf"
+                scale="0.4 0.4 0.4"
+                position="0 0.5 0"
+                animation="property: position; to: 0 0.8 0; dir: alternate; loop: true; dur: 2000;"
+                class="clickable"
+                data-object-id="ancient_artifact"
+                data-object-name="Древний артефакт"
+                data-points="20"
+                data-description="Загадочный артефакт древней цивилизации."
+            >
+                <a-text 
+                    value="Древний артефакт\n+20 баллов"
+                    position="0 1.8 0"
+                    align="center"
+                    color="#FF4444"
+                    scale="2 2 2"
+                ></a-text>
+            </a-entity>
+        </a-nft>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        // Конфигурация AR объектов
+        const arConfig = {
+            objects: {
+                treasure_chest: {
+                    name: "Сундук с сокровищами",
+                    points: 10,
+                    description: "Древний сундук, полный драгоценностей"
+                },
+                magic_crystal: {
+                    name: "Магический кристалл", 
+                    points: 15,
+                    description: "Сияющий кристалл магической энергии"
+                },
+                ancient_artifact: {
+                    name: "Древний артефакт",
+                    points: 20,
+                    description: "Загадочный артефакт древней цивилизации"
+                }
+            },
+            foundObjects: new Set()
+        };
+
+        // Инициализация сцены
+        document.addEventListener('DOMContentLoaded', () => {
+            initARScene();
+        });
+
+        function initARScene() {
+            console.log('Инициализация AR сцены...');
+            
+            const scene = document.querySelector('a-scene');
+            const loadingElement = document.getElementById('loading');
+            
+            scene.addEventListener('loaded', () => {
+                console.log('AR сцена загружена');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+                setupARTracking();
+                setupClickHandlers();
+                
+                // Уведомляем Flutter о готовности
+                if (window.AREvents) {
+                    window.AREvents.postMessage(JSON.stringify({
+                        type: 'tracking_started'
+                    }));
+                }
+            });
+
+            // Обработка ошибок
+            scene.addEventListener('error', (error) => {
+                console.error('AR ошибка:', error);
+                if (window.AREvents) {
+                    window.AREvents.postMessage(JSON.stringify({
+                        type: 'error',
+                        message: 'Ошибка инициализации AR: ' + error.detail
+                    }));
+                }
+            });
+        }
+
+        function setupARTracking() {
+            // Отслеживание найденных маркеров
+            const markers = document.querySelectorAll('a-nft');
+            
+            markers.forEach(marker => {
+                marker.addEventListener('markerFound', (event) => {
+                    console.log('Маркер найден:', event.target.id);
+                    
+                    if (window.AREvents) {
+                        window.AREvents.postMessage(JSON.stringify({
+                            type: 'image_found',
+                            markerId: event.target.id,
+                            imageName: getImageName(event.target.id)
+                        }));
+                    }
+                });
+
+                marker.addEventListener('markerLost', (event) => {
+                    console.log('Маркер потерян:', event.target.id);
+                    
+                    if (window.AREvents) {
+                        window.AREvents.postMessage(JSON.stringify({
+                            type: 'tracking_lost',
+                            markerId: event.target.id
+                        }));
+                    }
+                });
+            });
+        }
+
+        function setupClickHandlers() {
+            // Обработка кликов по AR объектам
+            document.addEventListener('click', (event) => {
+                const intersected = document.querySelector('a-entity.hovered');
+                
+                if (intersected && intersected.classList.contains('clickable')) {
+                    handleObjectClick(intersected);
+                }
+            });
+
+            // Добавляем визуальную обратную связь при наведении
+            const scene = document.querySelector('a-scene');
+            scene.addEventListener('mouseenter', (event) => {
+                if (event.target.classList.contains('clickable')) {
+                    event.target.classList.add('hovered');
+                    event.target.setAttribute('animation__hover', {
+                        property: 'scale',
+                        to: '1.2 1.2 1.2',
+                        dur: 200
+                    });
+                }
+            });
+
+            scene.addEventListener('mouseleave', (event) => {
+                if (event.target.classList.contains('clickable')) {
+                    event.target.classList.remove('hovered');
+                    event.target.setAttribute('animation__hover', {
+                        property: 'scale', 
+                        to: '1 1 1',
+                        dur: 200
+                    });
+                }
+            });
+        }
+
+        function handleObjectClick(object) {
+            const objectId = object.getAttribute('data-object-id');
+            const objectName = object.getAttribute('data-object-name');
+            const points = parseInt(object.getAttribute('data-points'));
+            const description = object.getAttribute('data-description');
+            
+            // Проверяем, не сканировали ли уже этот объект
+            if (!arConfig.foundObjects.has(objectId)) {
+                arConfig.foundObjects.add(objectId);
+                
+                // Визуальные эффекты
+                showScanEffects(object);
+                
+                // Уведомляем Flutter
+                if (window.AREvents) {
+                    window.AREvents.postMessage(JSON.stringify({
+                        type: 'object_scanned',
+                        objectId: objectId,
+                        objectName: objectName,
+                        points: points,
+                        description: description
+                    }));
+                }
+            } else {
+                // Объект уже найден
+                if (window.ARDebug) {
+                    window.ARDebug.postMessage('Объект уже сканирован: ' + objectId);
+                }
+            }
+        }
+
+        function showScanEffects(object) {
+            // Анимация сканирования
+            object.setAttribute('animation__scan', {
+                property: 'scale',
+                to: '1.5 1.5 1.5',
+                dur: 300,
+                easing: 'easeOutElastic'
+            });
+            
+            // Эффект частиц (упрощенный)
+            const scanEffect = document.createElement('a-ring');
+            scanEffect.setAttribute('color', '#00FF00');
+            scanEffect.setAttribute('radius-inner', '0.5');
+            scanEffect.setAttribute('radius-outer', '1');
+            scanEffect.setAttribute('position', '0 0.5 0');
+            scanEffect.setAttribute('animation', {
+                property: 'scale',
+                to: '3 3 3',
+                dur: 1000
+            });
+            scanEffect.setAttribute('animation__opacity', {
+                property: 'material.opacity',
+                to: '0',
+                dur: 1000
+            });
+            
+            object.appendChild(scanEffect);
+            
+            // Удаляем эффект после анимации
+            setTimeout(() => {
+                if (scanEffect.parentNode) {
+                    scanEffect.parentNode.removeChild(scanEffect);
+                }
+                object.setAttribute('scale', '1 1 1');
+            }, 1000);
+        }
+
+        function getImageName(markerId) {
+            const names = {
+                'marker1': 'Изображение 1 - Сундук',
+                'marker2': 'Изображение 2 - Кристалл', 
+                'marker3': 'Изображение 3 - Артефакт'
+            };
+            return names[markerId] || markerId;
+        }
+
+        // Обработка ошибок камеры
+        window.addEventListener('arjs-video-loaded', (event) => {
+            console.log('Камера успешно загружена');
+        });
+
+        window.addEventListener('arjs-source-ready', (event) => {
+            console.log('Источник камеры готов');
+        });
+    </script>
+</body>
+</html>
