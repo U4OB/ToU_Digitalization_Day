@@ -61,7 +61,7 @@ class _QuestRoadmapItem extends ConsumerWidget {
 
   // Логика навигации на основе ID задания
   void _navigateToTaskScreen(BuildContext context) {
-    Widget? targetScreen;
+    Widget targetScreen;
     String screenTitle;
 
     // В зависимости от ID задания, определяем, куда навигировать
@@ -87,17 +87,15 @@ class _QuestRoadmapItem extends ConsumerWidget {
         return;
     }
 
-    if (targetScreen != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Scaffold(
-            appBar: AppBar(title: Text(screenTitle)),
-            body: targetScreen,
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: Text(screenTitle)),
+          body: targetScreen,
         ),
-      );
-    }
+      ),
+    );
   }
 
   @override

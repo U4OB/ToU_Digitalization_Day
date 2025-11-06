@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/home/profile_screen.dart';
+import 'package:flutter_application_1/presentation/AR/ARImageTrackingScreen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Импортируем вкладки
 import 'package:flutter_application_1/screens//quest_tab.dart';
-import 'package:flutter_application_1/screens/quiz_tab.dart';
-import 'package:flutter_application_1/screens/qr_scan_tab.dart';
 
 class MainTmaScreen extends ConsumerStatefulWidget {
   // Поскольку это главный экран, он не принимает параметров
@@ -21,6 +20,7 @@ class _MainTmaScreenState extends ConsumerState<MainTmaScreen> {
   // Список виджетов-вкладок
   static final List<Widget> _widgetOptions = <Widget>[
     const QuestTab(), // Бывший QuestScreen, теперь как вкладка
+    const ARImageTrackingScreen(), // AR экран с Image Tracking
     // const QuizTab(), // ЭКРАН КВИЗА (Заглушка)
     // const QrScanTab(), // ЭКРАН QR-СКАНИРОВАНИЯ (Заглушка)
     const ProfileScreen(), // ЭКРАН СЧЕТА/ПРОФИЛЬ (Заглушка)
@@ -29,16 +29,19 @@ class _MainTmaScreenState extends ConsumerState<MainTmaScreen> {
   // Список заголовков для AppBar
   static const List<String> _titles = <String>[
     'Главный Квест',
-    // 'Прохождение Квиза',
-    // 'Сканер QR-кодов',
-    'Мой Прогресс',
+    'AR'
+        // 'Прохождение Квиза',
+        // 'Сканер QR-кодов',
+        'Мой Прогресс',
   ];
 
   // Метод для обработки выбора вкладки
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index >= 0 && index < _widgetOptions.length) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
   }
 
   @override
@@ -54,7 +57,10 @@ class _MainTmaScreenState extends ConsumerState<MainTmaScreen> {
       // ),
 
       // IndexedStack сохраняет состояние всех вкладок
-      body: IndexedStack(index: _selectedIndex, children: _widgetOptions),
+      body: IndexedStack(
+        index: _selectedIndex < _widgetOptions.length ? _selectedIndex : 0,
+        children: _widgetOptions,
+      ),
 
       // Нижняя панель навигации
       bottomNavigationBar: BottomNavigationBar(
@@ -63,6 +69,11 @@ class _MainTmaScreenState extends ConsumerState<MainTmaScreen> {
             icon: Icon(Icons.star_border),
             activeIcon: Icon(Icons.star),
             label: 'Квест',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.star_border),
+            activeIcon: Icon(Icons.star),
+            label: 'AR',
           ),
           // BottomNavigationBarItem(
           //   icon: Icon(Icons.quiz_outlined),

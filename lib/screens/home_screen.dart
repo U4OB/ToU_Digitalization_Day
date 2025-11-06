@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/home/news_screen.dart';
-import 'package:flutter_application_1/screens/home/schedule_screen.dart';
-import 'package:flutter_application_1/screens/home/ideas_hub_screen.dart';
+
 import 'package:flutter_application_1/screens/home/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,12 +14,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   // Список виджетов для отображения на каждой вкладке
-  static const List<Widget> _widgetOptions = <Widget>[
-    NewsScreen(),
-    ScheduleScreen(),
-    IdeasHubScreen(),
-    ProfileScreen(),
-  ];
+  static const List<Widget> _widgetOptions = <Widget>[ProfileScreen()];
 
   // Метод для обработки выбора вкладки
   void _onItemTapped(int index) {
