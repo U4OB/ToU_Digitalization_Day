@@ -41,15 +41,39 @@
       left: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
-      z-index: -1 !important; /* Позади Flutter UI */
+      /* Размещаем сцену ПОД Flutter UI, но делаем Flutter фон прозрачным,
+         чтобы видеопоток камеры был виден. Отрицательный z-index скрывает сцену */
+      z-index: 0 !important;
       display: block !important;
     }
+
+    /* Убедимся, что WebGL-канвас MindAR и возможный видеоэлемент растянуты на весь экран */
+    a-scene canvas, a-scene video, .mindar-video, video#mindar-video {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+      z-index: 0 !important;
+    }
     
-    /* Скрываем Flutter UI элементы, которые могут перекрывать AR */
-    body {
+    /* Делаем фон прозрачным, чтобы была видна AR сцена под Flutter */
+    html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
+      background: transparent !important;
+    }
+
+    /* Для HTML-рендерера Flutter: стеклянная панель без фона */
+    .flt-glass-pane, #flutter_host_element {
+      background: transparent !important;
+    }
+
+    /* Для CanvasKit: у холста не должно быть заливки фоном */
+    canvas {
+      background: transparent !important;
     }
   </style>
 </head>
@@ -86,8 +110,13 @@
     renderer="logarithmicDepthBuffer: true; antialias: true; precision: medium; alpha: true;"
     background="color: transparent"
     >
-
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <!-- Включаем обработку кликов по объектам мышью и ограничиваем raycaster -->
+    <a-camera 
+      position="0 0 0" 
+      look-controls="enabled: false" 
+      cursor="rayOrigin: mouse" 
+      raycaster="objects: .ar-object; far: 1000">
+    </a-camera>
     
   </a-scene>
 </body>
